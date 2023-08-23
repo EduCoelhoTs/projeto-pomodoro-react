@@ -1,0 +1,13 @@
+Styled components:
+
+npm i styled-components
+
+npm i @types/styled-components
+
+EsLint
+
+npm i eslint
+
+Router:
+
+npm i react-router-dom

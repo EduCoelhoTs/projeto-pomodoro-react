@@ -60,3 +60,33 @@ export const HistoryList = styled.div`
     }
   }
 `
+
+// Podemos criar um objeto, para mapear a cor de acordo com o valor recebido:
+const STATUS_COLORS = {
+  yellow: 'yellow-500',
+  green: 'green-500',
+  red: 'red-500',
+} as const
+
+// podemos passar uma propriedade para o styledComponent Status:
+interface StatusColor {
+  statusColor: keyof typeof STATUS_COLORS
+}
+
+// criando um componente novo de status com um parametro, que deve ser passado na tag:
+export const Status = styled.span<StatusColor>`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  /* o before e o after, são elementos que ficam dentro da tag (no caso do span, antes ou depois de ter conteudo adicionado) */
+  &::before {
+    /* conteudo a aparecer na tela */
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: ${(props) => props.theme[STATUS_COLORS[props.statusColor]]};
+    /* Estamos criando um elemento dentro da tag, antes de qualquer elemento que venha a ser adicionado */
+  }
+`

@@ -19,13 +19,26 @@ export function Home() {
             type="text"
             id="task"
             placeholder="Dê um nome para o seu projeto"
+            list="task-sugestion"
           />
+
+          {/* criando uma lista de sugestões nativa com HTML => Referencia a lista no input */}
+
+          <datalist id="task-sugestion">
+            <option value="Projeto alpha" />
+            <option value="Projeto beta" />
+            <option value="Projeto gama" />
+            <option value="Projeto teta" />
+          </datalist>
 
           <label htmlFor="minuteAmount">durante</label>
           <MinutesAmountInput
             type="number"
             id="minuteAmount"
             placeholder="00"
+            step={5}
+            min={5}
+            max={60}
           />
 
           <span>minutos.</span>

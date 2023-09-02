@@ -50,6 +50,12 @@ const BaseInput = styled.input`
 // fazendo herança de estilização. Passando um styled component como base para outro:
 export const TaskInput = styled(BaseInput)`
   flex: 1;
+
+  /* para tirar o seletor do datalist */
+  /* Obs: O & serve para referenciar o proprio elemento */
+  &::-webkit-calendar-picker-indicator {
+    display: none !important;
+  }
 `
 
 export const MinutesAmountInput = styled(BaseInput)`

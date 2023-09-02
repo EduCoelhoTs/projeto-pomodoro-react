@@ -13,6 +13,11 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
 
+interface newCycleFormData {
+  task: string
+  minuteAmount: number
+}
+
 // criando um schema de validação:
 // repare, que usamos zod.object => isso ocorre, por que o formulário retorna um objeto(task: '', minutesAmount: number)
 // em cada chave do objeto, será passado a regra de validação e suas mensagens de erro:
@@ -22,14 +27,20 @@ const newCycleValidationSchema = zod.object({
   minutesAmount: zod.number().min(5).max(60, 'O valor maximo deve ser 60'),
 })
 export function Home() {
-  const { register, handleSubmit, watch, formState } = useForm({
-    resolver: zodResolver(newCycleValidationSchema),
-  })
+  const { register, handleSubmit, watch, formState, reset } =
+    useForm<newCycleFormData>({
+      resolver: zodResolver(newCycleValidationSchema),
+      defaultValues: {
+        task: '',
+        minuteAmount: 0,
+      },
+    })
   // A função useForm, recebe um resolver, que sera um metodo, que por sua vez receberá um schema de validação, com
   // o formato dos dados do objeto do formulário, junto das validações que ele deve ter;
 
   function onSubmitForm(data: unknown) {
     console.log(data)
+    reset()
   }
 
   // pegando erros:

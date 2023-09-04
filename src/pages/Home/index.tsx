@@ -41,6 +41,8 @@ export function Home() {
   const [cycles, setCycles] = useState<Cycle[]>([])
   // criando um estado para armazenar os dados do ciclo ativo;
   const [activeCycleId, setActiveCycleID] = useState<string | null>()
+  // criando estado para quantidade de segundos passados:
+  const [amountSecondsPassed, setAmountSecondsPassed] = useState<number>(0)
 
   // Criando estrutura inicial do formulário
   const { register, handleSubmit, watch, formState, reset } =
@@ -69,7 +71,22 @@ export function Home() {
 
   const activeCycle: Cycle | undefined = cycles.find(cycle => cycle.id === activeCycleId)
 
-  console.log('ciclo ativo', activeCycle)
+  // iniciando logica do countdown:
+  // Se tiver algum ciclo ativo, vai retornar a quantidade de segundos daquele ciclo.
+  // Se nao(caso a tela esteja iniciando ou o tenha recarregado, retorna 0)
+  const totalSeconds: number = activeCycle ? activeCycle.minuteAmount * 60 : 0 
+
+  // criando uma variável para pegar a quantidade atual de segundos:
+  const currentSeconds: number = activeCycle ? totalSeconds -  amountSecondsPassed : 0
+
+  // criando uma variavel para armazenar a quantidade atual em minutos:
+  const minutesAmount = Math.floor(currentSeconds / 60)
+  const secondsAmount = currentSeconds % 60
+
+  // construindo a logica de minutos(metodo padstart=> preenche a string com algum caracter quando ela nao
+  // tiver esse tamanho minimo);
+  const minutes = String(minutesAmount).padStart(2, '0')
+  const seconds = String(secondsAmount).padStart(2, '0')
 
   function onSubmitError(err: any) {
     console.log(err)
@@ -146,11 +163,11 @@ export function Home() {
         </FormContainer>
 
         <CountdownContainer>
-          <span>0</span>
-          <span>0</span>
+          <span>{minutes[0]}</span>
+          <span>{minutes[1]}</span>
           <Separator>:</Separator>
-          <span>0</span>
-          <span>0</span>
+          <span>{seconds[0]}</span>
+          <span>{seconds[1]}</span>
         </CountdownContainer>
 
         <StartCountDownButton disabled={isSubmitDisabled} type="submit">

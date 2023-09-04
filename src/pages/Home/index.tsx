@@ -12,7 +12,13 @@ import { useForm } from 'react-hook-form'
 // importando o zod e o resolver:
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
-import { FormEvent } from 'react'
+import { useState } from 'react';
+
+interface Cycle {
+  id: string
+  task: string
+  minuteAmount: number
+}
 
 interface newCycleFormData {
   task: string
@@ -27,7 +33,16 @@ const newCycleValidationSchema = zod.object({
   task: zod.string().min(1, 'Informa a tarefa'),
   minuteAmount: zod.number().min(5).max(60, 'O valor maximo deve ser 60'),
 })
+
+
 export function Home() {
+
+  // criando um estado para armazenar os dados de ciclo.
+  const [cycles, setCycles] = useState<Cycle[]>([])
+  // criando um estado para armazenar os dados do ciclo ativo;
+  const [activeCycleId, setActiveCycleID] = useState<string | null>()
+
+  // Criando estrutura inicial do formulário
   const { register, handleSubmit, watch, formState, reset } =
     useForm<newCycleFormData>({
       resolver: zodResolver(newCycleValidationSchema),
@@ -41,9 +56,20 @@ export function Home() {
 
   function onSubmitForm(data: newCycleFormData, event: any) {
     event.preventDefault()
-    console.log(data)
+    const newCycle: Cycle = {
+      id: String(new Date().getTime()),
+      task: data.task,
+      minuteAmount: data.minuteAmount
+    }
+
+    setCycles((prevState) => [...prevState, newCycle])
+    setActiveCycleID(newCycle.id)
     reset()
   }
+
+  const activeCycle: Cycle | undefined = cycles.find(cycle => cycle.id === activeCycleId)
+
+  console.log('ciclo ativo', activeCycle)
 
   function onSubmitError(err: any) {
     console.log(err)

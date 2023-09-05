@@ -12,17 +12,20 @@ import { useForm } from 'react-hook-form'
 // importando o zod e o resolver:
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { differenceInSeconds } from 'date-fns'
 
 interface Cycle {
   id: string
   task: string
-  minuteAmount: number
+  minuteAmount: number,
+  startDate: Date,
 }
 
 interface newCycleFormData {
   task: string
   minuteAmount: number
+  startDate: Date
 }
 
 // criando um schema de validação:
@@ -55,13 +58,28 @@ export function Home() {
     })
   // A função useForm, recebe um resolver, que sera um metodo, que por sua vez receberá um schema de validação, com
   // o formato dos dados do objeto do formulário, junto das validações que ele deve ter;
+  
+  const activeCycle: Cycle | undefined = cycles.find(cycle => cycle.id === activeCycleId)
+
+  useEffect(
+    () => {
+      if(activeCycle) {
+        setInterval(() => {
+          setAmountSecondsPassed(
+            // setando a quantidade de segundos passados. Utilizando método do date-fns
+            differenceInSeconds(new Date(), activeCycle.startDate)
+          )
+        }, 1000)
+      }
+    }, [activeCycle])
 
   function onSubmitForm(data: newCycleFormData, event: any) {
     event.preventDefault()
     const newCycle: Cycle = {
       id: String(new Date().getTime()),
       task: data.task,
-      minuteAmount: data.minuteAmount
+      minuteAmount: data.minuteAmount,
+      startDate: new Date()
     }
 
     setCycles((prevState) => [...prevState, newCycle])
@@ -69,7 +87,6 @@ export function Home() {
     reset()
   }
 
-  const activeCycle: Cycle | undefined = cycles.find(cycle => cycle.id === activeCycleId)
 
   // iniciando logica do countdown:
   // Se tiver algum ciclo ativo, vai retornar a quantidade de segundos daquele ciclo.

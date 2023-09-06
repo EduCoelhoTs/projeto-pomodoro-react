@@ -63,16 +63,22 @@ export function Home() {
 
   useEffect(
     () => {
+      let interval: number
       if(activeCycle) {
-        setInterval(() => {
+        interval = setInterval(() => {
           setAmountSecondsPassed(
             // setando a quantidade de segundos passados. Utilizando método do date-fns
             differenceInSeconds(new Date(), activeCycle.startDate)
           )
         }, 1000)
       }
+      // criando um onDestroy(fluxo que sera executado quando o componente for destruido)
+      return () => {
+        clearInterval(interval)
+      }
     }, [activeCycle])
 
+  
   function onSubmitForm(data: newCycleFormData, event: any) {
     event.preventDefault()
     const newCycle: Cycle = {
@@ -84,6 +90,8 @@ export function Home() {
 
     setCycles((prevState) => [...prevState, newCycle])
     setActiveCycleID(newCycle.id)
+    setAmountSecondsPassed(0)
+    
     reset()
   }
 
@@ -108,6 +116,13 @@ export function Home() {
   function onSubmitError(err: any) {
     console.log(err)
   }
+
+    // alterando o title da pagina:
+    useEffect(() => {
+      if(activeCycle) {
+        document.title = `${minutes}:${seconds}`
+      }
+    }, [minutes, seconds])
 
   // pegando erros:
   console.log(formState)

@@ -1,4 +1,4 @@
-import { Play } from 'phosphor-react'
+import { HandPalm, Play } from 'phosphor-react'
 import {
   CountdownContainer,
   FormContainer,
@@ -6,6 +6,7 @@ import {
   MinutesAmountInput,
   Separator,
   StartCountDownButton,
+  StopCountDownButton,
   TaskInput,
 } from './style'
 import { useForm } from 'react-hook-form'
@@ -20,6 +21,7 @@ interface Cycle {
   task: string
   minuteAmount: number,
   startDate: Date,
+  interruptDate?: Date
 }
 
 interface newCycleFormData {
@@ -95,6 +97,17 @@ export function Home() {
     reset()
   }
 
+  function handleInterruptCycle() {
+    cycles.map((cycle) => {
+      if (cycle.id === activeCycleId) {
+        return { ...cycle, interruptDate: new Date()}
+      } else {
+        return cycle
+      }
+    })
+    setActiveCycleID(null)
+  }
+
 
   // iniciando logica do countdown:
   // Se tiver algum ciclo ativo, vai retornar a quantidade de segundos daquele ciclo.
@@ -151,6 +164,7 @@ export function Home() {
           <label htmlFor="task">Vou trabalhar em</label>
           <TaskInput
             type="text"
+            disabled={!!activeCycle}
             id="task"
             list="task-sugestion"
             placeholder="Dê um nome para o seu projeto"
@@ -184,6 +198,7 @@ export function Home() {
           <MinutesAmountInput
             type="number"
             id="minuteAmount"
+            disabled={!!activeCycle}
             placeholder="00"
             step={5}
             min={5}
@@ -202,10 +217,16 @@ export function Home() {
           <span>{seconds[1]}</span>
         </CountdownContainer>
 
-        <StartCountDownButton disabled={isSubmitDisabled} type="submit">
+        { activeCycle ? 
+          (<StopCountDownButton onClick={handleInterruptCycle} type="button">
+          <HandPalm size={24} />
+          Interromper
+          </StopCountDownButton>  ) : 
+          <StartCountDownButton disabled={isSubmitDisabled} type="submit">
           <Play size={24} />
           Começar
-        </StartCountDownButton>
+          </StartCountDownButton>  
+        }
       </form>
     </HomeContainer>
   )

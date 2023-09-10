@@ -1,20 +1,13 @@
 import { HandPalm, Play } from 'phosphor-react'
 import {
-  CountdownContainer,
-  FormContainer,
   HomeContainer,
-  MinutesAmountInput,
-  Separator,
   StartCountDownButton,
   StopCountDownButton,
-  TaskInput,
 } from './style'
-import { useForm } from 'react-hook-form'
 // importando o zod e o resolver:
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as zod from 'zod'
 import { useEffect, useState } from 'react'
-import { differenceInSeconds } from 'date-fns'
+import NewCycleForm from './NewCycleForm'
+import { CountdownContainer } from './Countdown/style'
 
 interface Cycle {
   id: string
@@ -25,78 +18,15 @@ interface Cycle {
   finishDate?: Date
 }
 
-interface newCycleFormData {
-  task: string
-  minuteAmount: number
-  startDate: Date
-}
-
-// criando um schema de validação:
-// repare, que usamos zod.object => isso ocorre, por que o formulário retorna um objeto(task: '', minutesAmount: number)
-// em cada chave do objeto, será passado a regra de validação e suas mensagens de erro:
-const newCycleValidationSchema = zod.object({
-  // Repare que toda validação, de valores, recebe o valor, e a mensagem de erro opcional como parametro.
-  task: zod.string().min(1, 'Informa a tarefa'),
-  minuteAmount: zod.number().min(5).max(60, 'O valor maximo deve ser 60'),
-})
-
 export function Home() {
   // criando um estado para armazenar os dados de ciclo.
   const [cycles, setCycles] = useState<Cycle[]>([])
   // criando um estado para armazenar os dados do ciclo ativo;
   const [activeCycleId, setActiveCycleID] = useState<string | null>()
-  // criando estado para quantidade de segundos passados:
-  const [amountSecondsPassed, setAmountSecondsPassed] = useState<number>(0)
-
-  // Criando estrutura inicial do formulário
-  const { register, handleSubmit, watch, formState, reset } =
-    useForm<newCycleFormData>({
-      resolver: zodResolver(newCycleValidationSchema),
-      defaultValues: {
-        task: '',
-        minuteAmount: 0,
-      },
-    })
-  // A função useForm, recebe um resolver, que sera um metodo, que por sua vez receberá um schema de validação, com
-  // o formato dos dados do objeto do formulário, junto das validações que ele deve ter;
 
   const activeCycle: Cycle | undefined = cycles.find(
     (cycle) => cycle.id === activeCycleId,
   )
-
-  const totalSeconds: number = activeCycle ? activeCycle.minuteAmount * 60 : 0
-
-  useEffect(() => {
-    let interval: number
-    if (activeCycle) {
-      interval = setInterval(() => {
-        // setando a quantidade de segundos passados. Utilizando método do date-fns
-        const secondsDifference = differenceInSeconds(
-          new Date(),
-          activeCycle.startDate,
-        )
-        if (secondsDifference >= totalSeconds) {
-          setCycles((state) =>
-            state.map((cycle) => {
-              if (cycle.id === activeCycleId) {
-                return { ...cycle, finishDate: new Date() }
-              } else {
-                return cycle
-              }
-            }),
-          )
-          setAmountSecondsPassed(totalSeconds)
-          clearInterval(interval)
-        } else {
-          setAmountSecondsPassed(secondsDifference)
-        }
-      }, 1000)
-    }
-    // criando um onDestroy(fluxo que sera executado quando o componente for destruido)
-    return () => {
-      clearInterval(interval)
-    }
-  }, [activeCycle, totalSeconds, activeCycleId])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function onSubmitForm(data: newCycleFormData, event: any) {
@@ -178,62 +108,16 @@ export function Home() {
 
 //{...register('minuteAmount', { valueAsNumber: true })} */}
       <form action="" onSubmit={handleSubmit(onSubmitForm, onSubmitError)}>
-        <FormContainer>
-          <label htmlFor="task">Vou trabalhar em</label>
-          <TaskInput
-            type="text"
-            disabled={!!activeCycle}
-            id="task"
-            list="task-sugestion"
-            placeholder="Dê um nome para o seu projeto"
-            {...register('task')}
-          />
-
-          {/* //Repare que foi feito um spread, da função register
-//passando uma string. A string, nada mais é do que o
-//nome do nosso input no formulário.
-//Já o spread, ocorre por que a função register retorna
-//um objeto, com diversos atributos e métodos desse elemento
-///input:
-/// function register(nomeInput: string) {
-///      return {
-///         onChange: () => void
-///         onBlur: () => void
-///         max: number
-///   ...etc
-///E o spread serve para passar esses atributos para o input */}
-
-          {/* criando uma lista de sugestões nativa com HTML => Referencia a lista no input */}
-
-          <datalist id="task-sugestion">
-            <option value="Projeto alpha" />
-            <option value="Projeto beta" />
-            <option value="Projeto gama" />
-            <option value="Projeto teta" />
-          </datalist>
-
-          <label htmlFor="minuteAmount">durante</label>
-          <MinutesAmountInput
-            type="number"
-            id="minuteAmount"
-            disabled={!!activeCycle}
-            placeholder="00"
-            step={5}
-            min={5}
-            max={60}
-            {...register('minuteAmount', { valueAsNumber: true })}
-          />
-
-          <span>minutos.</span>
-        </FormContainer>
-
-        <CountdownContainer>
-          <span>{minutes[0]}</span>
-          <span>{minutes[1]}</span>
-          <Separator>:</Separator>
-          <span>{seconds[0]}</span>
-          <span>{seconds[1]}</span>
-        </CountdownContainer>
+        {/* //Ja quanto ao handleSubmit do useForm(),
+//repare que passamos para ele como parametro, a nossa função
+//de submit do formulário. Ele basicamente, vai retornar essa função
+//passando como parametro para ela, o formGroup do formulário:
+//onSubmit={handleSubmit(onSubmitForm)}
+//data: { nome: "Eduardo" }
+//por padrão, esses dados vem como string, mas podemos passar um objeto
+//de configuração para fazer um parse desses dados: */}
+        <NewCycleForm />
+        <CountdownContainer activeCycle={activeCycle} setCycles={setCycles} activeCycleId={activeCycleId} />
 
         {activeCycle ? (
           <StopCountDownButton onClick={handleInterruptCycle} type="button">

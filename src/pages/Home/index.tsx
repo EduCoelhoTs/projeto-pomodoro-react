@@ -13,15 +13,16 @@ import { useForm } from 'react-hook-form'
 // importando o zod e o resolver:
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'
 import { differenceInSeconds } from 'date-fns'
 
 interface Cycle {
   id: string
   task: string
-  minuteAmount: number,
-  startDate: Date,
+  minuteAmount: number
+  startDate: Date
   interruptDate?: Date
+  finishDate?: Date
 }
 
 interface newCycleFormData {
@@ -39,9 +40,7 @@ const newCycleValidationSchema = zod.object({
   minuteAmount: zod.number().min(5).max(60, 'O valor maximo deve ser 60'),
 })
 
-
 export function Home() {
-
   // criando um estado para armazenar os dados de ciclo.
   const [cycles, setCycles] = useState<Cycle[]>([])
   // criando um estado para armazenar os dados do ciclo ativo;
@@ -60,47 +59,66 @@ export function Home() {
     })
   // A função useForm, recebe um resolver, que sera um metodo, que por sua vez receberá um schema de validação, com
   // o formato dos dados do objeto do formulário, junto das validações que ele deve ter;
-  
-  const activeCycle: Cycle | undefined = cycles.find(cycle => cycle.id === activeCycleId)
 
-  useEffect(
-    () => {
-      let interval: number
-      if(activeCycle) {
-        interval = setInterval(() => {
-          setAmountSecondsPassed(
-            // setando a quantidade de segundos passados. Utilizando método do date-fns
-            differenceInSeconds(new Date(), activeCycle.startDate)
+  const activeCycle: Cycle | undefined = cycles.find(
+    (cycle) => cycle.id === activeCycleId,
+  )
+
+  const totalSeconds: number = activeCycle ? activeCycle.minuteAmount * 60 : 0
+
+  useEffect(() => {
+    let interval: number
+    if (activeCycle) {
+      interval = setInterval(() => {
+        // setando a quantidade de segundos passados. Utilizando método do date-fns
+        const secondsDifference = differenceInSeconds(
+          new Date(),
+          activeCycle.startDate,
+        )
+        if (secondsDifference >= totalSeconds) {
+          setCycles((state) =>
+            state.map((cycle) => {
+              if (cycle.id === activeCycleId) {
+                return { ...cycle, finishDate: new Date() }
+              } else {
+                return cycle
+              }
+            }),
           )
-        }, 1000)
-      }
-      // criando um onDestroy(fluxo que sera executado quando o componente for destruido)
-      return () => {
-        clearInterval(interval)
-      }
-    }, [activeCycle])
+          setAmountSecondsPassed(totalSeconds)
+          clearInterval(interval)
+        } else {
+          setAmountSecondsPassed(secondsDifference)
+        }
+      }, 1000)
+    }
+    // criando um onDestroy(fluxo que sera executado quando o componente for destruido)
+    return () => {
+      clearInterval(interval)
+    }
+  }, [activeCycle, totalSeconds, activeCycleId])
 
-  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function onSubmitForm(data: newCycleFormData, event: any) {
     event.preventDefault()
     const newCycle: Cycle = {
       id: String(new Date().getTime()),
       task: data.task,
       minuteAmount: data.minuteAmount,
-      startDate: new Date()
+      startDate: new Date(),
     }
 
     setCycles((prevState) => [...prevState, newCycle])
     setActiveCycleID(newCycle.id)
     setAmountSecondsPassed(0)
-    
+
     reset()
   }
 
   function handleInterruptCycle() {
     cycles.map((cycle) => {
       if (cycle.id === activeCycleId) {
-        return { ...cycle, interruptDate: new Date()}
+        return { ...cycle, interruptDate: new Date() }
       } else {
         return cycle
       }
@@ -108,14 +126,14 @@ export function Home() {
     setActiveCycleID(null)
   }
 
-
   // iniciando logica do countdown:
   // Se tiver algum ciclo ativo, vai retornar a quantidade de segundos daquele ciclo.
   // Se nao(caso a tela esteja iniciando ou o tenha recarregado, retorna 0)
-  const totalSeconds: number = activeCycle ? activeCycle.minuteAmount * 60 : 0 
 
   // criando uma variável para pegar a quantidade atual de segundos:
-  const currentSeconds: number = activeCycle ? totalSeconds -  amountSecondsPassed : 0
+  const currentSeconds: number = activeCycle
+    ? totalSeconds - amountSecondsPassed
+    : 0
 
   // criando uma variavel para armazenar a quantidade atual em minutos:
   const minutesAmount = Math.floor(currentSeconds / 60)
@@ -126,16 +144,16 @@ export function Home() {
   const minutes = String(minutesAmount).padStart(2, '0')
   const seconds = String(secondsAmount).padStart(2, '0')
 
-  function onSubmitError(err: any) {
+  function onSubmitError(err: unknown) {
     console.log(err)
   }
 
-    // alterando o title da pagina:
-    useEffect(() => {
-      if(activeCycle) {
-        document.title = `${minutes}:${seconds}`
-      }
-    }, [minutes, seconds])
+  // alterando o title da pagina:
+  useEffect(() => {
+    if (activeCycle) {
+      document.title = `${minutes}:${seconds}`
+    }
+  }, [minutes, seconds])
 
   // pegando erros:
   console.log(formState)
@@ -217,16 +235,17 @@ export function Home() {
           <span>{seconds[1]}</span>
         </CountdownContainer>
 
-        { activeCycle ? 
-          (<StopCountDownButton onClick={handleInterruptCycle} type="button">
-          <HandPalm size={24} />
-          Interromper
-          </StopCountDownButton>  ) : 
+        {activeCycle ? (
+          <StopCountDownButton onClick={handleInterruptCycle} type="button">
+            <HandPalm size={24} />
+            Interromper
+          </StopCountDownButton>
+        ) : (
           <StartCountDownButton disabled={isSubmitDisabled} type="submit">
-          <Play size={24} />
-          Começar
-          </StartCountDownButton>  
-        }
+            <Play size={24} />
+            Começar
+          </StartCountDownButton>
+        )}
       </form>
     </HomeContainer>
   )
